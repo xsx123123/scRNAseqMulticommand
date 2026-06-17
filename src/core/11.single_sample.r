@@ -33,6 +33,10 @@ singlesample_scRNA_seq_analysis <- function(scRNAtype, name, reduceType = 'FALSE
   
   Seurat_matrix <- Seurat_list[[1]]
   
+  # Write QC summary
+  qc_summary_data <- build_qc_summary(Cellranger_dir, cellRangerlist_dataframe)
+  write_step_summary("qc", qc_summary_data, Cellranger_dir)
+  
   # 2. Normalization & Dimensionality Reduction
   info(logger, paste0('Normalization & Feature Selection (Method: ', normalization_method, ')'))
   
@@ -82,6 +86,11 @@ singlesample_scRNA_seq_analysis <- function(scRNAtype, name, reduceType = 'FALSE
                                   save_dir = doublet_dir)
   Seurat_matrix <- Seurat_list_dbl[[1]]
   saveRDS(Seurat_matrix, file.path(doublet_dir, "doublet-Seurat.rds"))
+  write_step_summary("doublet", list(
+    samples = list(),
+    metrics = list(),
+    artifacts = list(list(type = "dir", path = "QC/doublet"))
+  ), doublet_dir)
   
   # 7. Ambient RNA Removal
   info(logger, 'Estimating Ambient RNA Contamination...')
@@ -90,6 +99,16 @@ singlesample_scRNA_seq_analysis <- function(scRNAtype, name, reduceType = 'FALSE
   
   # 8. Visualization
   draw_umap_tsne_plot(Seurat_matrix, reduceType = reduceType, intergetmethods = 'NULL', name = name, figure_dir = figure_dir)
+  
+  # Write ambient RNA summary
+  write_step_summary("ambient_rna", list(
+    samples = list(),
+    metrics = list(),
+    artifacts = list(
+      list(type = "qs", path = "QC/RNAContamination/mouse_analysis_decontX_results.qs"),
+      list(type = "png", path = "QC/RNAContamination/AmbientRNAContamination.png")
+    )
+  ), RNAContamination_dir)
   
   # 9. Automated Annotation (Species Specific)
   # Only run if Human/Mouse, or Custom DB provided
@@ -106,6 +125,20 @@ singlesample_scRNA_seq_analysis <- function(scRNAtype, name, reduceType = 'FALSE
   } else {
     info(logger, paste0("Skipping SingleR Annotation for TaxID: ", origin_tax_ID, " (Plant/Other)."))
   }
+  
+  # Write annotation summary
+  write_step_summary("annotation", list(
+    samples = list(),
+    metrics = list(),
+    artifacts = list(
+      list(type = "dir", path = "annotation/auto-annotation-SinglR"),
+      list(type = "dir", path = "annotation/proportions-plot")
+    )
+  ), annotation_dir)
+  
+  # Write global manifest
+  result_root <- file.path(root_dir, save_output_name)
+  write_manifest(ctx, result_root, final_objects = build_final_objects(result_root))
   
   # CellID / ScType (Optional)
   # RunScType(Seurat_matrix, ...) 

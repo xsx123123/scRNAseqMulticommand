@@ -1,0 +1,53 @@
+---
+title: "Clustering & Marker Genes"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE)
+source("R/read_manifest.R")
+source("R/read_summary.R")
+source("R/plot_helpers.R")
+source("R/load_seurat.R")
+
+result_dir <- "data"
+manifest <- read_manifest(result_dir)
+
+cluster_step <- find_step(manifest, "cluster_markers")
+cluster_summary <- if (!is.null(cluster_step)) read_step_summary(result_dir, cluster_step$summary) else NULL
+```
+
+## Cluster Marker Summary
+
+```{r cluster-status}
+if (is.null(cluster_summary)) {
+  cat("Cluster marker summary not available.")
+} else {
+  cat(paste0("Status: **", cluster_summary$status, "**  "))
+  cat(paste0("Timestamp: ", cluster_summary$timestamp))
+}
+```
+
+## Multi-Resolution UMAP
+
+```{r cluster-plots, fig.cap="UMAP across multiple clustering resolutions", out.width="100%"}
+if (!is.null(cluster_summary)) {
+  img_path <- find_artifact(cluster_summary, "png")
+  if (!is.null(img_path)) {
+    display_image(result_dir, img_path)
+  } else {
+    cat("No clustering plot found.")
+  }
+}
+```
+
+## Top Marker Genes
+
+```{r marker-table}
+marker_csv <- file.path(result_dir, "cluster/marker_gene", paste0(manifest$integration_method, "_clusters_marker_list.csv"))
+if (file.exists(marker_csv)) {
+  markers <- read.csv(marker_csv, stringsAsFactors = FALSE)
+  knitr::kable(head(markers, 50), format = "html")
+} else {
+  cat("Marker gene list not found.")
+}
+```

@@ -28,6 +28,8 @@ source(file.path(PIPELINE_PATH,'src/core/10.annotation.r'))
 source(file.path(PIPELINE_PATH,'src/core/11.single_sample.r'))
 # loading multi sample analysis function 
 source(file.path(PIPELINE_PATH,'src/core/12.multisample.r'))
+# loading report manifest generator
+source(file.path(PIPELINE_PATH,'src/core/99.report_manifest.r'))
 #-----------------------------------####---------------------------------------#
 # loading visualization function
 source(file.path(PIPELINE_PATH,'src/viz/01.vis_dim_reduction.r'))

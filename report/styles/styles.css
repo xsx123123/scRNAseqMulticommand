@@ -1,0 +1,33 @@
+/* Custom styles for scRNAseqMulticommand Quarto report */
+
+.quarto-title-banner {
+  padding: 2rem 1rem;
+}
+
+.sidebar-title {
+  font-weight: bold;
+}
+
+.navbar-brand {
+  font-weight: 600;
+}
+
+/* Make tables more compact */
+table {
+  font-size: 0.9rem;
+}
+
+/* Add subtle border around figures */
+.figure {
+  margin: 1.5rem 0;
+  padding: 0.5rem;
+  border: 1px solid #e9ecef;
+  border-radius: 0.25rem;
+  background-color: #ffffff;
+}
+
+.figure-caption {
+  font-size: 0.85rem;
+  color: #6c757d;
+  margin-top: 0.5rem;
+}

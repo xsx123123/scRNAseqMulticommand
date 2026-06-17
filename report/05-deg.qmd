@@ -1,0 +1,43 @@
+---
+title: "Differential Expression"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE)
+source("R/read_manifest.R")
+source("R/read_summary.R")
+source("R/plot_helpers.R")
+
+result_dir <- "data"
+manifest <- read_manifest(result_dir)
+```
+
+## DEG Summary
+
+Differential expression results are saved under `figure/deg/`. This section displays available DEG tables and volcano plots.
+
+```{r deg-files}
+deg_dir <- file.path(result_dir, "figure", "deg")
+if (dir.exists(deg_dir)) {
+  deg_csvs <- list.files(deg_dir, pattern = "\\.csv$", recursive = TRUE, full.names = TRUE)
+  if (length(deg_csvs) > 0) {
+    cat("Found", length(deg_csvs), "DEG result files.")
+  } else {
+    cat("No DEG CSV files found.")
+  }
+} else {
+  cat("DEG directory not found.")
+}
+```
+
+## Top DEG Results
+
+```{r deg-table}
+if (dir.exists(deg_dir)) {
+  deg_csvs <- list.files(deg_dir, pattern = "\\.csv$", recursive = TRUE, full.names = TRUE)
+  if (length(deg_csvs) > 0) {
+    top_deg <- read.csv(deg_csvs[1], stringsAsFactors = FALSE)
+    knitr::kable(head(top_deg, 20), format = "html")
+  }
+}
+```

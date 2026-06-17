@@ -1,0 +1,16 @@
+/*-- scss:defaults --*/
+$primary: #2c3e50;
+$navbar-bg: #2c3e50;
+$navbar-fg: #ffffff;
+$sidebar-bg: #f8f9fa;
+
+/*-- scss:rules --*/
+.quarto-title-banner {
+  background-color: $primary;
+  color: #ffffff;
+}
+
+.quarto-title-banner h1,
+.quarto-title-banner .title {
+  color: #ffffff;
+}

@@ -26,6 +26,10 @@ multisample_scRNA_seq_analysis <- function(ctx,
   Seurat_list <- DNBC4_10X(scRNAtype = ctx$scRNAtype,scRNAAutofilted = scRNAAutofilted,
                            cellRangerlist,group_data,Cellranger_dir,origin_tax_ID,
                            cellRangerlist_dataframe = ctx$cellRangerlist_dataframe)
+  
+  # Write QC summary
+  qc_summary_data <- build_qc_summary(Cellranger_dir, ctx$cellRangerlist_dataframe)
+  write_step_summary("qc", qc_summary_data, Cellranger_dir)
 
   # 2. Doublet Detection (Per Sample)
   # Run DoubletFinder BEFORE integration on individual samples
@@ -41,6 +45,11 @@ multisample_scRNA_seq_analysis <- function(ctx,
 
   info(logger,'  Draw Doublet Plot ... ')
   DoubletPlot(Seurat_list,ctx$doublet_dir)
+  write_step_summary("doublet", list(
+    samples = list(),
+    metrics = list(),
+    artifacts = list(list(type = "dir", path = "QC/doublet"))
+  ), ctx$doublet_dir)
 
   # 3. Merge for Initial Check (Optional but good for Batch Effect viz)
   # Merge raw counts to check batch effect before correction
@@ -72,6 +81,11 @@ multisample_scRNA_seq_analysis <- function(ctx,
                                        normalization_method = 'LogNormalize',
                                        selection_method = 'vst',
                                        nfeatures = 2000)
+  write_step_summary("batch_check", list(
+    samples = list(),
+    metrics = list(),
+    artifacts = list(list(type = "dir", path = "BatchCheck"))
+  ), ctx$BatchCheck_dir)
   all_project <- CreateNewSeurat(merge)
   # 4. Integration
   # We use the optimized 'IntergetPatch' (renamed/refactored logic)
@@ -93,6 +107,14 @@ multisample_scRNA_seq_analysis <- function(ctx,
   integrated_obj <- JoinLayers(integrated_obj, assay = "RNA")
   # Save Checkpoint
   qs::qsave(integrated_obj, file.path(ctx$doublet_dir, "scrna_seq_integrated.rds"))
+  write_step_summary("integration", list(
+    samples = list(),
+    metrics = list(integration_method = ctx$intergetmethods),
+    artifacts = list(
+      list(type = "dir", path = "DealPatch"),
+      list(type = "rds", path = "QC/doublet/scrna_seq_integrated.rds")
+    )
+  ), ctx$DealPatch_dir)
   # 5. Ambient RNA (DecontX)
   # Usually DecontX runs on raw counts. We can run it on the integrated object's RNA assay.
   info(logger,crayon::blue(crayon::bold('>>>>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<<')))
@@ -102,6 +124,16 @@ multisample_scRNA_seq_analysis <- function(ctx,
   DrawAmbientRNAContamination_UMAP(integrated_obj,
                                    ctx$RNAContamination_dir,
                                    ctx$intergetmethods)
+  invisible(gc(verbose = FALSE))
+  info(logger, '  Freed memory after Ambient RNA analysis.')
+  write_step_summary("ambient_rna", list(
+    samples = list(),
+    metrics = list(),
+    artifacts = list(
+      list(type = "qs", path = file.path("QC/RNAContamination", paste0(ctx$project_name, "_decontX_results.qs"))),
+      list(type = "png", path = "QC/RNAContamination/AmbientRNAContamination.png")
+    )
+  ), ctx$RNAContamination_dir)
   # 6. Visualization & Stats
   info(logger,crayon::blue(crayon::bold('>>>>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<<')))
   info(logger, crayon::bold(crayon::inverse(">>> STEP 12 : draw UMAP/tSNE for Integrated object")))
@@ -135,7 +167,16 @@ multisample_scRNA_seq_analysis <- function(ctx,
   draw_res_DimPlot(integrated_obj, 
                  intergetmethods = ctx$intergetmethods,
                  ctx$figure_dir,
-                 ctx$cluster_marker_gene_dir)                
+                 ctx$cluster_marker_gene_dir)
+  write_step_summary("cluster_markers", list(
+    samples = list(),
+    metrics = list(),
+    artifacts = list(
+      list(type = "dir", path = "cluster/marker_gene"),
+      list(type = "dir", path = "cluster/UMAP-plot"),
+      list(type = "dir", path = "cluster/tSNE-plot")
+    )
+  ), ctx$cluster_marker_gene_dir)
 
   # 8. Annotation
   if(origin_tax_ID %in% c(9606, 10090)){
@@ -159,6 +200,19 @@ multisample_scRNA_seq_analysis <- function(ctx,
   } else {
     info(logger, paste0("  Skipping SingleR for TaxID: ", origin_tax_ID))
   }
+  
+  write_step_summary("annotation", list(
+    samples = list(),
+    metrics = list(),
+    artifacts = list(
+      list(type = "dir", path = "annotation/auto-annotation-SinglR"),
+      list(type = "dir", path = "annotation/proportions-plot")
+    )
+  ), ctx$annotation_dir)
+  
+  # Write global manifest
+  result_root <- file.path(ctx$root_dir, ctx$save_output_name)
+  write_manifest(ctx, result_root, final_objects = build_final_objects(result_root))
   
   # info(logger,crayon::blue(crayon::bold('>>>>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<<')))
   # info(logger, crayon::bold(crayon::inverse(">>> STEP 14 : Seurat format to Annodata")))

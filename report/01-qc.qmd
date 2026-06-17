@@ -1,0 +1,50 @@
+---
+title: "Quality Control"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE)
+source("R/read_manifest.R")
+source("R/read_summary.R")
+source("R/tables.R")
+source("R/plot_helpers.R")
+
+result_dir <- "data"
+manifest <- read_manifest(result_dir)
+qc_step <- find_step(manifest, "qc")
+qc_summary <- if (!is.null(qc_step)) read_step_summary(result_dir, qc_step$summary) else NULL
+```
+
+## QC Summary
+
+```{r qc-status}
+if (is.null(qc_summary)) {
+  cat("QC summary not available.")
+} else {
+  cat(paste0("Status: **", qc_summary$status, "**  "))
+  cat(paste0("Timestamp: ", qc_summary$timestamp))
+}
+```
+
+## Sample Filtering Statistics
+
+```{r qc-table}
+if (!is.null(qc_summary)) {
+  knitr::kable(render_qc_table(qc_summary), format = "html")
+} else {
+  cat("No QC data available.")
+}
+```
+
+## QC Plots
+
+```{r qc-plots, fig.cap="Per-sample QC violin plots", out.width="100%"}
+if (!is.null(qc_summary)) {
+  img_path <- find_artifact(qc_summary, "png")
+  if (!is.null(img_path)) {
+    display_image(result_dir, img_path)
+  } else {
+    cat("No QC plot found in summary.")
+  }
+}
+```

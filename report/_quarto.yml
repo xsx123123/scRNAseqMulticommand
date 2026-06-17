@@ -1,0 +1,46 @@
+project:
+  type: website
+  output-dir: _site
+  render:
+    - index.qmd
+    - 01-qc.qmd
+    - 02-integration.qmd
+    - 03-clustering.qmd
+    - 04-annotation.qmd
+    - 05-deg.qmd
+    - 06-methods.qmd
+
+website:
+  title: "scRNAseqMulticommand Report"
+  navbar:
+    left:
+      - href: index.qmd
+        text: Overview
+      - href: 01-qc.qmd
+        text: QC
+      - href: 02-integration.qmd
+        text: Integration
+      - href: 03-clustering.qmd
+        text: Clustering
+      - href: 04-annotation.qmd
+        text: Annotation
+      - href: 05-deg.qmd
+        text: DEG
+      - href: 06-methods.qmd
+        text: Methods
+  sidebar:
+    style: docked
+    contents: auto
+
+format:
+  html:
+    theme:
+      - cosmo
+      - styles/theme.scss
+    css: styles/styles.css
+    toc: true
+    code-fold: true
+    code-summary: "Show code"
+    fig-width: 10
+    fig-height: 8
+    self-contained: true

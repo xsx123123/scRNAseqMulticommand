@@ -1,0 +1,63 @@
+---
+title: "Batch Effect & Integration"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE)
+source("R/read_manifest.R")
+source("R/read_summary.R")
+source("R/plot_helpers.R")
+
+result_dir <- "data"
+manifest <- read_manifest(result_dir)
+
+batch_step <- find_step(manifest, "batch_check")
+batch_summary <- if (!is.null(batch_step)) read_step_summary(result_dir, batch_step$summary) else NULL
+
+integration_step <- find_step(manifest, "integration")
+integration_summary <- if (!is.null(integration_step)) read_step_summary(result_dir, integration_step$summary) else NULL
+```
+
+## Batch Check
+
+```{r batch-status}
+if (is.null(batch_summary)) {
+  cat("Batch check summary not available.")
+} else {
+  cat(paste0("Status: **", batch_summary$status, "**  "))
+  cat(paste0("Timestamp: ", batch_summary$timestamp))
+}
+```
+
+```{r batch-plots, fig.cap="Pre-integration batch check UMAP/tSNE", out.width="100%"}
+if (!is.null(batch_summary)) {
+  img_path <- find_artifact(batch_summary, "png")
+  if (!is.null(img_path)) {
+    display_image(result_dir, img_path)
+  } else {
+    cat("No batch check plot found.")
+  }
+}
+```
+
+## Integration
+
+```{r integration-status}
+if (is.null(integration_summary)) {
+  cat("Integration summary not available.")
+} else {
+  cat(paste0("Status: **", integration_summary$status, "**  "))
+  cat(paste0("Method: ", integration_summary$metrics$integration_method %||% "N/A"))
+}
+```
+
+```{r integration-plots, fig.cap="Post-integration UMAP and clustering tree", out.width="100%"}
+if (!is.null(integration_summary)) {
+  img_path <- find_artifact(integration_summary, "png")
+  if (!is.null(img_path)) {
+    display_image(result_dir, img_path)
+  } else {
+    cat("No integration plot found.")
+  }
+}
+```
