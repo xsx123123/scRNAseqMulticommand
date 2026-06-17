@@ -218,6 +218,22 @@ VisualizeAnnotation <- function(data, group_by, save_dir, prefix, reduction = "u
     return()
   }
   
+  # Validate requested reduction; fall back to an available UMAP/tSNE reduction if missing
+  available_reductions <- names(data@reductions)
+  if(!reduction %in% available_reductions){
+    fallback <- available_reductions[grep("^umap", available_reductions, ignore.case = TRUE)][1]
+    if(is.na(fallback)){
+      fallback <- available_reductions[grep("^tsne|^(tSNE|tsne)$", available_reductions, ignore.case = TRUE)][1]
+    }
+    if(!is.na(fallback)){
+      warn(logger, paste0("Reduction '", reduction, "' not found in object. Using '", fallback, "' instead for ", group_by, "."))
+      reduction <- fallback
+    } else {
+      warn(logger, paste0("No suitable UMAP/tSNE reduction found for plotting ", group_by, ". Skipping plot."))
+      return()
+    }
+  }
+  
   p <- DimPlot(data, reduction = reduction, group.by = group_by, label = TRUE, repel = TRUE) +
     ggtitle(paste0("Annotation: ", group_by)) + theme_classic() +
     theme(legend.position = "bottom")

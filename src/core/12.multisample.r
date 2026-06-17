@@ -192,9 +192,18 @@ multisample_scRNA_seq_analysis <- function(ctx,
     # Check what was generated and plot
     meta_cols <- colnames(integrated_obj@meta.data)
     singler_cols <- grep("SingleR_.*_cluster", meta_cols, value = TRUE)
+    # Map integration method to the UMAP reduction name produced by IntergetPatch
+    umap_reduction <- switch(intergetmethods,
+                             "CCA"   = "umap.cca",
+                             "Harmony" = "umap.harmony",
+                             "RPCA"  = "umap.rpca",
+                             "ALL"   = "umap.cca",  # CCA is the primary/default result
+                             "SCVI"  = "umap.scvi",
+                             "umap")
     for(col in singler_cols){
       info(logger, paste0("  Drawing SingleR annotation for: ", col))
-      VisualizeAnnotation(integrated_obj, group_by = col, save_dir = annotation_SinglR_dir, prefix = "Integrated")
+      VisualizeAnnotation(integrated_obj, group_by = col, save_dir = annotation_SinglR_dir,
+                          prefix = "Integrated", reduction = umap_reduction)
     }
     
   } else {
