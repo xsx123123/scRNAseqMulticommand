@@ -10,9 +10,24 @@ read_step_summary <- function(result_dir, step_summary_path) {
 }
 
 find_step <- function(manifest, step_name) {
-  step <- manifest$steps[manifest$steps$step == step_name, , drop = FALSE]
-  if (nrow(step) == 0) return(NULL)
-  step
+  steps <- manifest$steps
+  if (is.null(steps) || length(steps) == 0) return(NULL)
+
+  if (is.data.frame(steps)) {
+    step <- steps[steps$step == step_name, , drop = FALSE]
+    if (nrow(step) == 0) return(NULL)
+    return(step[1, , drop = FALSE])
+  }
+
+  matches <- Filter(function(x) !is.null(x$step) && identical(x$step, step_name), steps)
+  if (length(matches) == 0) return(NULL)
+  as.data.frame(matches[[1]], stringsAsFactors = FALSE)
+}
+
+read_summary_for_step <- function(result_dir, manifest, step_name) {
+  step <- find_step(manifest, step_name)
+  if (is.null(step)) return(NULL)
+  read_step_summary(result_dir, step$summary[1])
 }
 
 is_step_success <- function(manifest, step_name) {

@@ -219,9 +219,16 @@ multisample_scRNA_seq_analysis <- function(ctx,
     )
   ), ctx$annotation_dir)
   
-  # Write global manifest
+  # Write report JSON for the Quarto report. This rescans final outputs so
+  # the report captures plots, tables, object files, and cell metadata written by all steps.
   result_root <- file.path(ctx$root_dir, ctx$save_output_name)
-  write_manifest(ctx, result_root, final_objects = build_final_objects(result_root))
+  generate_report_json(
+    result_dir = result_root,
+    project_name = ctx$project_name,
+    species_tax_id = ctx$origin_tax_ID,
+    integration_method = ctx$intergetmethods,
+    pipeline_version = if (exists("ScriptsVersion")) ScriptsVersion else "unknown"
+  )
   
   # info(logger,crayon::blue(crayon::bold('>>>>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<<')))
   # info(logger, crayon::bold(crayon::inverse(">>> STEP 14 : Seurat format to Annodata")))

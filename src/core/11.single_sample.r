@@ -136,9 +136,16 @@ singlesample_scRNA_seq_analysis <- function(scRNAtype, name, reduceType = 'FALSE
     )
   ), annotation_dir)
   
-  # Write global manifest
-  result_root <- file.path(root_dir, save_output_name)
-  write_manifest(ctx, result_root, final_objects = build_final_objects(result_root))
+  # Write report JSON for the Quarto report. This rescans final outputs so
+  # the report captures plots, tables, object files, and cell metadata written by all steps.
+  result_root <- file.path(ctx$root_dir, ctx$save_output_name)
+  generate_report_json(
+    result_dir = result_root,
+    project_name = ctx$project_name,
+    species_tax_id = ctx$origin_tax_ID,
+    integration_method = "NULL",
+    pipeline_version = if (exists("ScriptsVersion")) ScriptsVersion else "unknown"
+  )
   
   # CellID / ScType (Optional)
   # RunScType(Seurat_matrix, ...) 

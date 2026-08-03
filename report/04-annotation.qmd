@@ -6,55 +6,54 @@ title: "Cell Type Annotation"
 knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE)
 source("R/read_manifest.R")
 source("R/read_summary.R")
+source("R/tables.R")
 source("R/plot_helpers.R")
 
-result_dir <- "data"
+result_dir <- get_result_dir("data")
 manifest <- read_manifest(result_dir)
-
-annotation_step <- find_step(manifest, "annotation")
-annotation_summary <- if (!is.null(annotation_step)) read_step_summary(result_dir, annotation_step$summary) else NULL
+annotation_summary <- read_summary_for_step(result_dir, manifest, "annotation")
 ```
 
 ## Annotation Summary
 
-```{r annotation-status}
+```{r annotation-status, results='asis'}
 if (is.null(annotation_summary)) {
   cat("Annotation summary not available.")
 } else {
   cat(paste0("Status: **", annotation_summary$status, "**  "))
-  cat(paste0("Timestamp: ", annotation_summary$timestamp))
+  cat(paste0("Artifacts: ", annotation_summary$metrics$artifact_count %||% 0))
 }
 ```
 
 ## Annotation Plots
 
-```{r annotation-plots, fig.cap="SingleR cell type annotation", out.width="100%"}
-if (!is.null(annotation_summary)) {
-  img_path <- find_artifact(annotation_summary, "png")
-  if (!is.null(img_path)) {
-    display_image(result_dir, img_path)
-  } else {
-    cat("No annotation plot found.")
+```{r annotation-plots, fig.cap="Cell type annotation diagnostics", out.width="48%"}
+if (!is.null(annotation_summary)) display_images(result_dir, annotation_summary, max_images = 12)
+```
+
+## Annotation Counts
+
+```{r annotation-counts}
+counts <- annotation_summary$metrics$annotation_counts
+if (!is.null(counts) && length(counts) > 0) {
+  for (item in counts) {
+    cat("### ", item$column, "\n\n", sep = "")
+    count_df <- render_count_table(item$counts)
+    if (nrow(count_df) > 0) knitr::kable(count_df, format = "html")
+    cat("\n\n")
   }
+} else {
+  cat("No annotation count columns were found in Cell-cluster-infor.csv.")
 }
 ```
 
-## Cell Proportions
+## Annotation Artifacts
 
-```{r proportion-plots, fig.cap="Cell type proportions by group/sample", out.width="100%"}
-if (!is.null(annotation_summary)) {
-  # Look for proportion plot artifact
-  prop_artifact <- annotation_summary$artifacts[sapply(annotation_summary$artifacts, function(x) x$type == "dir" && grepl("proportions", x$path))]
-  if (length(prop_artifact) > 0) {
-    prop_dir <- file.path(result_dir, prop_artifact[[1]]$path)
-    prop_png <- list.files(prop_dir, pattern = "\\.png$", full.names = TRUE)[1]
-    if (!is.na(prop_png)) {
-      knitr::include_graphics(prop_png)
-    } else {
-      cat("No proportion plot found.")
-    }
-  } else {
-    cat("No proportion plot artifact found.")
-  }
+```{r annotation-artifacts}
+artifacts <- artifact_table(annotation_summary)
+if (nrow(artifacts) > 0) {
+  knitr::kable(artifacts[, intersect(c("type", "path", "bytes"), colnames(artifacts)), drop = FALSE], format = "html")
+} else {
+  cat("No annotation artifacts recorded.")
 }
 ```
