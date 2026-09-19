@@ -58,7 +58,7 @@ CellRanger,name,group,library_type
 **坑位提示**：
 
 - `-y` / `--yaml` 参数**无效**：yaml 永远读取 `<repo>/scRNAseqMulticommand.yaml`，改配置直接编辑该文件；
-- CLI 是 R 脚本，用 `Rscript` 执行，当前版本 v4.1.1-alpha。
+- CLI 是 R 脚本，用 `Rscript` 执行，当前版本 v4.1.2-alpha。
 
 ## 执行步骤（Workflow）
 
@@ -77,14 +77,14 @@ CellRanger,name,group,library_type
 
 ### 3. 执行命令
 
-**推荐 = Docker**（规避脚本 shebang `#!/opt/conda/envs/scrna/bin/Rscript` 与宿主机环境名不一致的问题；镜像名 `scrna-seq-multicommand:v4.1.1-alpha`，Dockerfile 见 `build_analysis_env/`）：
+**推荐 = Docker**（规避脚本 shebang `#!/opt/conda/envs/scrna/bin/Rscript` 与宿主机环境名不一致的问题；镜像名 `scrna-seq-multicommand:v4.1.2-alpha`，Dockerfile 见 `build_analysis_env/`）：
 
 ```bash
 docker run --rm \
   -v {数据目录}:/home/mambauser/workdir/data \
   -v {输出目录}:/home/mambauser/workdir/output \
   -v {Celldex目录}:/home/mambauser/scRNAseqMulticommand/Celldex \
-  scrna-seq-multicommand:v4.1.1-alpha \
+  scrna-seq-multicommand:v4.1.2-alpha \
   Rscript /home/mambauser/scRNAseqMulticommand/scRNAseqMulticommand \
     -c /home/mambauser/workdir/data/{conf.csv} \
     -o /home/mambauser/workdir/output \
